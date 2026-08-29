@@ -1,0 +1,22 @@
+# Go
+bin/
+*.test
+coverage.out
+
+# Node / Astro
+node_modules/
+dist/
+.astro/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

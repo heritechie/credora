@@ -1,0 +1,39 @@
+---
+import '../styles/global.css';
+import { site } from '../site';
+
+interface Props {
+	title?: string;
+	description?: string;
+}
+
+const { title = site.name, description = site.description } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{title}</title>
+		<meta name="description" content={description} />
+		<meta name="theme-color" content="#060a13" />
+		<meta name="generator" content={Astro.generator} />
+
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+
+		<!-- Open Graph / social -->
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content={site.name} />
+		<meta property="og:title" content={site.name} />
+		<meta property="og:description" content={description} />
+		<meta name="twitter:card" content="summary" />
+		<meta name="twitter:title" content={site.name} />
+		<meta name="twitter:description" content={description} />
+	</head>
+	<body>
+		<a class="skip-link" href="#main">Skip to content</a>
+		<slot />
+	</body>
+</html>

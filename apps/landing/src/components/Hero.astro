@@ -1,0 +1,252 @@
+---
+import { site } from '../site';
+---
+
+<section class="hero" id="top">
+	<!-- Decorative infrastructure visualization layer (blended into the background) -->
+	<div class="hero-visual" aria-hidden="true">
+		<!-- Poster still (shown on mobile and when reduced motion is preferred) -->
+		<img class="hero-poster" src="/video/credora-hero.webp" alt="" width="960" height="540" />
+		<!-- Animated scene (desktop, motion permitted) -->
+		<video
+			class="hero-video"
+			autoplay
+			muted
+			loop
+			playsinline
+			preload="metadata"
+			poster="/video/credora-hero.webp"
+		>
+			<source src="/video/credora-hero.webm" type="video/webm" />
+			<source src="/video/credora-hero.mp4" type="video/mp4" />
+		</video>
+	</div>
+
+	<!-- Subtle left-side scrim: keeps the headline, paragraph, and CTA readable
+	     on a clean dark area while the visual stays strong on the right. -->
+	<div class="hero-scrim" aria-hidden="true"></div>
+
+	<div class="container hero-inner">
+		<div class="hero-copy">
+			<p class="hero-eyebrow">Open-source credit decisioning infrastructure</p>
+			<h1>{site.headline}</h1>
+			<p class="hero-lede">
+				Open-source infrastructure for orchestrating credit data, scoring,
+				policies, and decisions — using the providers you already have.
+				Credora sits between your application and your providers. It does not
+				replace them; it coordinates them.
+			</p>
+			<div class="hero-actions">
+				<a href="#get-started" class="btn btn-primary">Get Started</a>
+				<a href={site.github} class="btn btn-secondary">View on GitHub</a>
+			</div>
+			<p class="hero-principle">{site.principle}</p>
+		</div>
+	</div>
+</section>
+
+<style>
+	.hero {
+		/* Large, clearly visible, controlled ambient visual on the right. Sized
+		   responsively and capped (62vw / 900px) so it occupies most of the right
+		   half of the hero without dominating the whole viewport. Height derives
+		   from the 16:10 aspect box for proportional, balance. */
+		--hero-visual-w: min(62vw, 900px);
+		position: relative;
+		overflow: hidden;
+		background: var(--c-bg);
+		background-image:
+			linear-gradient(rgba(148, 163, 184, 0.055) 1px, transparent 1px),
+			linear-gradient(90deg, rgba(148, 163, 184, 0.055) 1px, transparent 1px);
+		background-size: 44px 44px;
+		color: var(--c-ink-dark);
+	}
+
+	/* ---- Decorative visual layer ---- */
+	.hero-visual {
+		position: absolute;
+		top: 50%;
+		right: max(0.5rem, 3vw);
+		transform: translateY(-50%);
+		width: var(--hero-visual-w);
+		aspect-ratio: 16 / 10;
+		z-index: 1;
+		pointer-events: none;
+		/* no border, no radius, no shadow, no padding, no panel background */
+		/* blend the near-black scene into the dark hero background */
+		opacity: 0.96;
+		/* Directional edge fading — no single large radial mask, so there is no
+		   oval/ellipse shape. The left edge (toward the text) fades the most, the
+		   top and bottom fade subtly, and the right edge stays visible so the
+		   scene feels like it continues. Layers are combined by intersection
+		   (source-in) to produce a soft, irregular dissolve into the grid. */
+		-webkit-mask-image:
+			linear-gradient(to right, transparent 0%, black 26%),
+			linear-gradient(to bottom, transparent 0%, black 8%),
+			linear-gradient(to top, transparent 0%, black 8%);
+		mask-image:
+			linear-gradient(to right, transparent 0%, black 26%),
+			linear-gradient(to bottom, transparent 0%, black 8%),
+			linear-gradient(to top, transparent 0%, black 8%);
+		-webkit-mask-composite: source-in;
+		mask-composite: intersect;
+	}
+
+	/* Subtle gradient behind the text so the strongest visual stays on the right.
+	   The left side remains dark/readable; it does not darken the whole video. */
+	.hero-scrim {
+		position: absolute;
+		inset: 0;
+		z-index: 1;
+		pointer-events: none;
+		background: linear-gradient(
+			90deg,
+			rgba(6, 10, 19, 0.96) 0%,
+			rgba(6, 10, 19, 0.78) 30%,
+			rgba(6, 10, 19, 0.25) 55%,
+			transparent 72%
+		);
+	}
+
+	.hero-video,
+	.hero-poster {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		display: block;
+	}
+
+	/* Video only on desktop/motion; poster is the mobile + reduced-motion fallback */
+	.hero-poster {
+		display: none;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.hero-video {
+			display: none;
+		}
+
+		.hero-poster {
+			display: block;
+		}
+	}
+
+	/* ---- Content ---- */
+	.hero-inner {
+		position: relative;
+		z-index: 2;
+		padding-block: clamp(4rem, 10vw, 8rem);
+	}
+
+	.hero-copy {
+		max-width: 34rem;
+	}
+
+	.hero-eyebrow {
+		font-family: var(--font-mono);
+		font-size: 0.8125rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--c-accent);
+		margin-bottom: 1.1rem;
+	}
+
+	.hero h1 {
+		font-size: clamp(2.25rem, 5.4vw, 3.75rem);
+		line-height: 1.06;
+		letter-spacing: -0.025em;
+		max-width: 20ch;
+	}
+
+	.hero-lede {
+		margin-top: 1.25rem;
+		max-width: 40rem;
+		font-size: clamp(1rem, 1.6vw, 1.125rem);
+		color: var(--c-muted-dark);
+	}
+
+	.hero-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.85rem;
+		margin-top: 2rem;
+	}
+
+	.hero-principle {
+		margin-top: 2.25rem;
+		padding-top: 1.25rem;
+		border-top: 1px solid var(--c-line-dark);
+		font-family: var(--font-mono);
+		font-size: 0.95rem;
+		color: var(--c-ink-dark);
+	}
+
+	/* ---- Tablet ---- */
+	@media (max-width: 900px) {
+		.hero {
+			--hero-visual-w: 100vw;
+			--hero-visual-h: 110%;
+			-webkit-mask-image: none;
+			mask-image: none;
+		}
+
+		.hero-visual {
+			right: 0;
+			top: auto;
+			bottom: 0;
+			transform: none;
+			aspect-ratio: auto;
+			width: 100vw;
+			height: var(--hero-visual-h);
+			opacity: 0.6;
+		}
+
+		.hero-visual::after {
+			content: '';
+			position: absolute;
+			inset: 0;
+			background: linear-gradient(
+				to bottom,
+				transparent 0%,
+				transparent 55%,
+				var(--c-bg) 100%
+			);
+		}
+
+		.hero-inner {
+			padding-bottom: clamp(3rem, 8vw, 6rem);
+		}
+	}
+
+	/* ---- Mobile ---- */
+	/* A static poster backdrop reads better than a badly cropped 16:9 video
+	   squeezed into a narrow column. Hide the video, show the poster. */
+	@media (max-width: 600px) {
+		.hero {
+			--hero-visual-h: 100%;
+		}
+
+		.hero-video {
+			display: none;
+		}
+
+		.hero-poster {
+			display: block;
+		}
+
+		.hero-visual {
+			height: var(--hero-visual-h);
+			opacity: 0.45;
+		}
+
+		.hero-copy {
+			max-width: none;
+		}
+
+		.hero h1 {
+			max-width: 11ch;
+		}
+	}
+</style>

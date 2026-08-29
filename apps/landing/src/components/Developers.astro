@@ -1,0 +1,180 @@
+---
+
+<section class="section dev" id="developers">
+	<div class="container">
+		<div class="dev-grid">
+			<div>
+				<div class="section-head">
+					<p class="eyebrow">Developer Experience</p>
+					<h2>Define the assessment. Execute it. Get an explainable decision.</h2>
+				</div>
+				<p class="dev-lede">
+					This is the whole developer loop: define the assessment, trigger it
+					against a local engine, and read back a decision with structured
+					reasons. Everything else — the providers, scoring, policy,
+					evidence, and audit — happens inside Credora and is inspectable.
+				</p>
+				<ul class="dev-steps">
+					<li>
+						<strong>Define</strong> — reference an application and a policy
+					</li>
+					<li>
+						<strong>Execute</strong> — Credora runs providers in order
+					</li>
+					<li>
+						<strong>Decide</strong> — get APPROVE, REVIEW, or REJECT with reasons
+					</li>
+				</ul>
+			</div>
+
+			<div class="dev-codes">
+				<figure class="code-block">
+					<figcaption class="code-caption">
+						<span></span>POST /assessments
+					</figcaption>
+					<pre><code><span class="tk-p">$</span> curl -X POST <span class="tk-u">http://localhost:8080/assessments</span> \
+  -H <span class="tk-s">"Content-Type: application/json"</span> \
+  -d <span class="tk-s">'&#123;
+    "application_id": "app-001",
+    "policy": "personal-loan-v1"
+  &#125;'</span></code></pre>
+				</figure>
+
+				<figure class="code-block">
+					<figcaption class="code-caption"><span></span>200 OK</figcaption>
+					<pre><code>&#123;
+  <span class="tk-k">"decision"</span>: <span class="tk-s">"REJECT"</span>,
+  <span class="tk-k">"reasons"</span>: [
+    &#123;
+      <span class="tk-k">"code"</span>: <span class="tk-s">"HIGH_DSR"</span>,
+      <span class="tk-k">"value"</span>: <span class="tk-n">0.81</span>,
+      <span class="tk-k">"threshold"</span>: <span class="tk-n">0.70</span>
+    &#125;
+  ],
+  <span class="tk-k">"policy"</span>: <span class="tk-s">"personal-loan-v1"</span>
+&#125;</code></pre>
+				</figure>
+			</div>
+		</div>
+	</div>
+</section>
+
+<style>
+	.dev {
+		background: var(--c-bg);
+		color: var(--c-ink-dark);
+		background-image:
+			linear-gradient(rgba(148, 163, 184, 0.05) 1px, transparent 1px),
+			linear-gradient(90deg, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
+		background-size: 44px 44px;
+	}
+
+	.dev .eyebrow {
+		display: none;
+	}
+
+	.dev .section-head h2 {
+		color: var(--c-ink-dark);
+	}
+
+	.dev-grid {
+		display: grid;
+		grid-template-columns: 1fr 1.1fr;
+		gap: clamp(2rem, 5vw, 4rem);
+		align-items: center;
+	}
+
+	.dev-lede {
+		margin-top: 1.25rem;
+		color: var(--c-muted-dark);
+		max-width: 40rem;
+	}
+
+	.dev-steps {
+		list-style: none;
+		margin: 2rem 0 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+	}
+
+	.dev-steps li {
+		display: flex;
+		align-items: baseline;
+		gap: 0.75rem;
+		font-size: 0.95rem;
+		color: var(--c-muted-dark);
+	}
+
+	.dev-steps li::before {
+		content: '';
+		flex: 0 0 auto;
+		width: 0.5rem;
+		height: 0.5rem;
+		border-radius: 50%;
+		background: var(--c-accent);
+		transform: translateY(-2px);
+	}
+
+	.dev-steps strong {
+		color: var(--c-ink-dark);
+		font-family: var(--font-mono);
+		font-weight: 600;
+		min-width: 4.5rem;
+	}
+
+	.dev-codes {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		min-width: 0;
+	}
+
+	.code-caption {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.6rem 1.25rem;
+		border-bottom: 1px solid var(--c-line-dark);
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		color: var(--c-muted-dark);
+	}
+
+	.code-caption span {
+		width: 0.6rem;
+		height: 0.6rem;
+		border-radius: 50%;
+		background: var(--c-accent);
+		opacity: 0.85;
+	}
+
+	.tk-s {
+		color: #a5d6a0;
+	}
+
+	.tk-k {
+		color: #8cc3ff;
+	}
+
+	.tk-n {
+		color: #f2c46d;
+	}
+
+	.tk-p {
+		color: var(--c-accent);
+		font-weight: 700;
+	}
+
+	.tk-u {
+		color: var(--c-muted-dark);
+		text-decoration: none;
+	}
+
+	@media (max-width: 880px) {
+		.dev-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

@@ -1,0 +1,110 @@
+---
+import Pipeline from './Pipeline.astro';
+
+const steps = [
+	{ label: 'Application' },
+	{ label: 'Assessment' },
+	{ label: 'Providers', detail: 'your credentials, your data sources' },
+	{ label: 'Scoring' },
+	{ label: 'Policy' },
+	{ label: 'Decision' },
+	{ label: 'Evidence', detail: 'every step is recorded' },
+];
+---
+
+<section class="section how" id="how-it-works">
+	<div class="container">
+		<div class="section-head">
+			<p class="eyebrow">How Credora Works</p>
+			<h2>Orchestration between your app and your providers.</h2>
+			<p class="lede">
+				Credora sits between an application and the data providers it uses. It
+				sequences the steps, carries data forward, and records how a decision
+				was reached. Providers and credentials stay with you.
+			</p>
+		</div>
+
+		<div class="how-grid">
+			<div class="how-pipeline" aria-label="Assessment flow">
+				<Pipeline steps={steps} highlight={5} theme="light" />
+			</div>
+
+			<ul class="how-points">
+				<li>
+					<h3>Bring your own providers</h3>
+					<p>
+						Connect the identity, KYC, credit, and fraud providers you already
+						use. Credora does not substitute them.
+					</p>
+				</li>
+				<li>
+					<h3>Define the process</h3>
+					<p>
+						An assessment declares which providers run, in what order, and
+						which policy produces the decision.
+					</p>
+				</li>
+				<li>
+					<h3>Get explainable output</h3>
+					<p>
+						Every outcome pairs a decision with structured reasons, evidence,
+						and an audit trail you can inspect.
+					</p>
+				</li>
+			</ul>
+		</div>
+	</div>
+</section>
+
+<style>
+	.how {
+		background: var(--c-bg-elev-light);
+		border-top: 1px solid var(--c-line);
+	}
+
+	.how-grid {
+		margin-top: clamp(2rem, 4vw, 3rem);
+		display: grid;
+		grid-template-columns: minmax(0, 0.9fr) 1.1fr;
+		gap: clamp(2rem, 5vw, 4rem);
+		align-items: start;
+	}
+
+	.how-pipeline {
+		border: 1px solid var(--c-line);
+		border-radius: var(--radius-lg);
+		padding: 1.5rem;
+		background: var(--c-bg-light);
+		max-width: 26rem;
+	}
+
+	.how-points {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 1.75rem;
+	}
+
+	.how-points h3 {
+		font-size: 1.1rem;
+		margin-bottom: 0.35rem;
+		letter-spacing: -0.01em;
+	}
+
+	.how-points p {
+		color: var(--c-muted);
+		max-width: 38rem;
+	}
+
+	@media (max-width: 820px) {
+		.how-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.how-pipeline {
+			max-width: none;
+		}
+	}
+</style>

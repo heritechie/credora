@@ -1,0 +1,261 @@
+---
+import Icon from './Icon.astro';
+
+interface Capability {
+	icon: 'layers' | 'terminal' | 'code' | 'target' | 'eye' | 'archive' | 'clock';
+	title: string;
+	body: string;
+}
+
+interface Group {
+	title: string;
+	lede: string;
+	caps: Capability[];
+}
+
+const groups: Group[] = [
+	{
+		title: 'Assessment Execution',
+		lede: 'Run a defined assessment end to end, reliably.',
+		caps: [
+			{
+				icon: 'layers',
+				title: 'Orchestration',
+				body: 'Sequence multi-step credit assessments in a defined order, with controlled failures.',
+			},
+			{
+				icon: 'terminal',
+				title: 'Provider abstraction',
+				body: 'Integrate external identity, credit, fraud, and data providers behind stable, replaceable interfaces.',
+			},
+			{
+				icon: 'clock',
+				title: 'Retries & timeouts',
+				body: 'Handle slow and failing external calls deterministically, without corrupting state.',
+			},
+		],
+	},
+	{
+		title: 'Decisioning',
+		lede: 'Turn data into a defined, explainable outcome.',
+		caps: [
+			{
+				icon: 'code',
+				title: 'Rules as code',
+				body: 'Express deterministic credit policies as explicit, testable code — not hidden configuration.',
+			},
+			{
+				icon: 'target',
+				title: 'Decision',
+				body: 'Produce APPROVE, REVIEW, or REJECT as the business decision an application can act on.',
+			},
+			{
+				icon: 'eye',
+				title: 'Structured reasons',
+				body: 'Return stable reason codes with the values and thresholds that drove the outcome.',
+			},
+		],
+	},
+	{
+		title: 'Trust & Explainability',
+		lede: 'Make every decision inspectable after the fact.',
+		caps: [
+			{
+				icon: 'archive',
+				title: 'Evidence',
+				body: 'Preserve the provider outputs and inputs used to produce a decision, for later inspection.',
+			},
+			{
+				icon: 'clock',
+				title: 'Audit trail',
+				body: 'Track what happened during an assessment — which providers ran, what succeeded, and what failed.',
+			},
+		],
+	},
+];
+---
+
+<section class="section capabilities" id="capabilities">
+	<div class="container">
+		<div class="section-head">
+			<p class="eyebrow">Core Capabilities</p>
+			<h2>Infrastructure for the whole decision loop.</h2>
+			<p class="lede">
+				Credora targets the capabilities a lending team ends up building
+				internally — grouped around the decision loop, not a list of isolated
+				features.
+			</p>
+		</div>
+
+		<div class="cap-groups">
+			{groups.map((group) => (
+				<section class="cap-group">
+					<div class="cap-group-head">
+						<h3>{group.title}</h3>
+						<p>{group.lede}</p>
+					</div>
+					<ul class="cap-list">
+						{group.caps.map((cap) => (
+							<li class="cap-item">
+								<span class="cap-icon">
+									<Icon name={cap.icon} size={18} />
+								</span>
+								<div>
+									<h4>{cap.title}</h4>
+									<p>{cap.body}</p>
+								</div>
+							</li>
+						))}
+					</ul>
+				</section>
+			))}
+		</div>
+
+		<aside class="cap-byok" aria-label="Bring your own keys">
+			<span class="cap-byok-icon">
+				<Icon name="key" size={20} />
+			</span>
+			<div>
+				<h3>Bring your own keys.</h3>
+				<p>
+					Use your own provider credentials and infrastructure. Credora never
+					owns or defaults to a proprietary data source, and it never stores
+					your keys.
+				</p>
+			</div>
+		</aside>
+
+		<p class="cap-note">
+			Credora is under active development. These are the capabilities it is
+			being built to provide.
+		</p>
+	</div>
+</section>
+
+<style>
+	.capabilities {
+		background: var(--c-bg-light);
+		border-top: 1px solid var(--c-line);
+	}
+
+	.cap-groups {
+		margin-top: clamp(2rem, 4vw, 3rem);
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 1.25rem;
+	}
+
+	.cap-group {
+		display: flex;
+		flex-direction: column;
+		gap: 0.9rem;
+	}
+
+	.cap-group-head h3 {
+		font-size: 1.06rem;
+		letter-spacing: -0.01em;
+	}
+
+	.cap-group-head p {
+		margin-top: 0.2rem;
+		font-size: 0.85rem;
+		color: var(--c-muted);
+	}
+
+	.cap-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.cap-item {
+		display: flex;
+		gap: 0.85rem;
+		padding: 1.1rem 1.1rem;
+		background: var(--c-bg-elev-light);
+		border: 1px solid var(--c-line);
+		border-radius: var(--radius);
+	}
+
+	.cap-item h4 {
+		font-size: 0.95rem;
+		letter-spacing: -0.01em;
+		margin-bottom: 0.25rem;
+	}
+
+	.cap-item p {
+		font-size: 0.86rem;
+		color: var(--c-muted);
+	}
+
+	.cap-icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex: 0 0 auto;
+		width: 2.1rem;
+		height: 2.1rem;
+		border-radius: 8px;
+		background: var(--c-accent-soft);
+		color: var(--c-accent);
+	}
+
+	.cap-byok {
+		margin-top: 1.75rem;
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		padding: 1.25rem 1.5rem;
+		background: var(--c-bg);
+		color: var(--c-ink-dark);
+		border: 1px solid rgba(77, 141, 255, 0.4);
+		border-radius: var(--radius-lg);
+		box-shadow: 0 12px 32px rgba(6, 10, 19, 0.14);
+	}
+
+	.cap-byok-icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex: 0 0 auto;
+		width: 2.75rem;
+		height: 2.75rem;
+		border-radius: 10px;
+		background: var(--c-accent-soft);
+		color: var(--c-accent);
+	}
+
+	.cap-byok h3 {
+		font-family: var(--font-mono);
+		font-size: 1.05rem;
+		font-weight: 650;
+		margin-bottom: 0.25rem;
+	}
+
+	.cap-byok p {
+		color: var(--c-muted-dark);
+		font-size: 0.92rem;
+		max-width: 46rem;
+	}
+
+	.cap-note {
+		margin-top: 1.5rem;
+		font-size: 0.85rem;
+		color: var(--c-muted);
+	}
+
+	@media (max-width: 980px) {
+		.cap-groups {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	@media (max-width: 600px) {
+		.cap-byok {
+			align-items: flex-start;
+		}
+	}
+</style>

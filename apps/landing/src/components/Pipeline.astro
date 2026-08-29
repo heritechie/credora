@@ -1,0 +1,139 @@
+---
+interface Step {
+	label: string;
+	detail?: string;
+}
+
+interface Props {
+	steps: Step[];
+	highlight?: number;
+	label?: string;
+	theme?: 'dark' | 'light';
+}
+
+const { steps, highlight = -1, label, theme = 'dark' } = Astro.props;
+---
+
+<ol
+	class:list={['pipeline', `pipeline-${theme}`]}
+	role="list"
+	{label && `aria-label="${label}"`}
+>
+	{steps.map((step, i) => (
+		<li
+			class:list={['pipeline-node', { 'is-highlight': i === highlight }]}
+			style={`--i:${i}`}
+		>
+			<span class="pipeline-dot" aria-hidden="true"></span>
+			<div class="pipeline-text">
+				<span class="pipeline-label">{step.label}</span>
+				{step.detail && <span class="pipeline-detail">{step.detail}</span>}
+			</div>
+		</li>
+	))}
+</ol>
+
+<style>
+	.pipeline {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0;
+	}
+
+	.pipeline-node {
+		display: flex;
+		align-items: center;
+		gap: 0.9rem;
+		padding: 0.6rem 0.9rem;
+		border-radius: var(--radius);
+		border: 1px solid var(--c-line-dark);
+		background: rgba(11, 17, 32, 0.6);
+		position: relative;
+		font-family: var(--font-mono);
+		font-size: 0.875rem;
+		color: var(--c-ink-dark);
+	}
+
+	/* connector line between nodes */
+	.pipeline-node:not(:last-child)::after {
+		content: '';
+		position: absolute;
+		left: calc(0.9rem + 0.25rem);
+		top: 100%;
+		width: 1px;
+		height: 0.9rem;
+		background: linear-gradient(to bottom, var(--c-line-dark), transparent);
+	}
+
+	.pipeline-node:not(:last-child) {
+		margin-bottom: 0.9rem;
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.pipeline-node {
+			opacity: 0;
+			transform: translateY(10px);
+			animation: node-in 0.5s ease both;
+			animation-delay: calc(var(--i) * 90ms);
+		}
+
+		@keyframes node-in {
+			to {
+				opacity: 1;
+				transform: none;
+			}
+		}
+	}
+
+	/* light theme variant */
+	.pipeline-light .pipeline-node {
+		background: var(--c-bg-elev-light);
+		border: 1px solid var(--c-line);
+		color: var(--c-ink);
+	}
+
+	.pipeline-light .pipeline-node:not(:last-child)::after {
+		background: linear-gradient(to bottom, rgba(15, 23, 42, 0.15), transparent);
+	}
+
+	.pipeline-light .pipeline-dot {
+		background: var(--c-muted);
+	}
+
+	.pipeline-light .pipeline-detail {
+		color: var(--c-muted);
+	}
+
+	.pipeline-dot {
+		flex: 0 0 auto;
+		width: 0.5rem;
+		height: 0.5rem;
+		border-radius: 50%;
+		background: var(--c-muted-dark);
+	}
+
+	.is-highlight {
+		border-color: rgba(77, 141, 255, 0.5);
+		background: var(--c-accent-soft);
+	}
+
+	.is-highlight .pipeline-dot {
+		background: var(--c-accent);
+		box-shadow: 0 0 8px rgba(77, 141, 255, 0.7);
+	}
+
+	.pipeline-text {
+		display: flex;
+		flex-direction: column;
+		gap: 0.1rem;
+	}
+
+	.pipeline-detail {
+		font-family: var(--font-sans);
+		font-size: 0.75rem;
+		color: var(--c-muted-dark);
+	}
+</style>

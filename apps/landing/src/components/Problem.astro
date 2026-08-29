@@ -1,0 +1,100 @@
+---
+
+<section class="section problem" id="why">
+	<div class="container">
+		<div class="section-head problem-head">
+			<p class="eyebrow">The Problem</p>
+			<h2>Building the decision is easy. Operating it reliably is not.</h2>
+			<p class="lede">
+				A credit decision is more than a score. It is the coordinated result of
+				provider integrations, retries, orchestration, policy, evidence, and
+				audit — most of which is infrastructure, not business logic.
+			</p>
+		</div>
+
+		<ul class="problem-list">
+			<li>
+				<span class="problem-num">01</span>
+				<p>Provider integrations for identity, credit, KYC, and fraud</p>
+			</li>
+			<li>
+				<span class="problem-num">02</span>
+				<p>Retries, timeouts, and failure handling around external calls</p>
+			</li>
+			<li>
+				<span class="problem-num">03</span>
+				<p>Orchestration that sequences steps in the right order</p>
+			</li>
+			<li>
+				<span class="problem-num">04</span>
+				<p>Scoring logic and deterministic policy rules</p>
+			</li>
+			<li>
+				<span class="problem-num">05</span>
+				<p>Evidence capture and an audit trail for every decision</p>
+			</li>
+			<li>
+				<span class="problem-num">06</span>
+				<p>Structured reasons that explain why a decision was made</p>
+			</li>
+		</ul>
+
+		<p class="problem-outro">
+			The hard part is not finding data or calculating a score. It is
+			coordinating an entire decision process reliably — and proving that you
+			did. That coordination is what Credora provides.
+		</p>
+	</div>
+</section>
+
+<style>
+	.problem {
+		background: var(--c-bg-light);
+	}
+
+	.problem-list {
+		list-style: none;
+		margin: clamp(2rem, 4vw, 3rem) 0 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 0.75rem;
+	}
+
+	.problem-list li {
+		display: flex;
+		align-items: baseline;
+		gap: 1rem;
+		padding: 1.1rem 1.25rem;
+		background: var(--c-bg-elev-light);
+		border: 1px solid var(--c-line);
+		border-radius: var(--radius);
+	}
+
+	.problem-num {
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		color: var(--c-accent);
+		flex: 0 0 auto;
+	}
+
+	.problem-list p {
+		color: var(--c-ink);
+		font-weight: 500;
+	}
+
+	.problem-outro {
+		margin-top: 2rem;
+		padding-left: 1rem;
+		border-left: 2px solid var(--c-accent);
+		color: var(--c-muted);
+		font-size: 1.0625rem;
+		max-width: 42rem;
+	}
+
+	@media (max-width: 720px) {
+		.problem-list {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

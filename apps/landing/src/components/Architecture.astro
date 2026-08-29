@@ -1,0 +1,267 @@
+---
+
+<section class="section arch" id="architecture">
+	<div class="container">
+		<div class="section-head">
+			<p class="eyebrow">Architecture</p>
+			<h2>One layer between your app and your providers.</h2>
+			<p class="lede">
+				Credora sits in the data path: it receives assessments, coordinates
+				providers, applies scoring and policy, and returns explainable
+				decisions. Your providers stay yours.
+			</p>
+		</div>
+
+		<div class="arch-diagram" aria-label="Architecture diagram">
+			<div class="arch-band-label">Your application</div>
+			<div class="arch-app" role="img" aria-label="Your application node">
+				Your App
+			</div>
+			<div class="arch-flow" aria-hidden="true">
+				<span class="arch-line"></span>
+				<span class="arch-dir">&#8595;</span>
+			</div>
+			<div class="arch-core">
+				<div class="arch-core-head">
+					<span>Credora</span>
+					<em>orchestration &amp; decisioning</em>
+				</div>
+				<ul class="arch-core-list">
+					<li>Assessment</li>
+					<li>Orchestration</li>
+					<li>Policy</li>
+					<li>Decision</li>
+					<li>Evidence</li>
+					<li>Audit</li>
+				</ul>
+			</div>
+			<div class="arch-flow" aria-hidden="true">
+				<span class="arch-line"></span>
+				<span class="arch-dir">&#8595;</span>
+			</div>
+			<div class="arch-band-label">Your providers</div>
+			<ul class="arch-providers">
+				<li>
+					<span>KYC</span>
+					<em>your vendor</em>
+				</li>
+				<li>
+					<span>Credit</span>
+					<em>your bureau</em>
+				</li>
+				<li>
+					<span>Fraud</span>
+					<em>your vendor</em>
+				</li>
+				<li>
+					<span>Other</span>
+					<em>your data</em>
+				</li>
+			</ul>
+		</div>
+
+		<p class="arch-statement">
+			Credora doesn&rsquo;t replace your providers. It orchestrates them.
+		</p>
+
+		<p class="arch-note">
+			Providers connect to the engine through stable interfaces using your
+			credentials. Credora does not own or replace them.
+		</p>
+	</div>
+</section>
+
+<style>
+	.arch {
+		background: var(--c-bg);
+		color: var(--c-ink-dark);
+		background-image:
+			linear-gradient(rgba(148, 163, 184, 0.05) 1px, transparent 1px),
+			linear-gradient(90deg, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
+		background-size: 44px 44px;
+		border-top: 1px solid var(--c-line-dark);
+	}
+
+	.arch .section-head h2 {
+		color: var(--c-ink-dark);
+	}
+
+	.arch .section-head .lede {
+		color: var(--c-muted-dark);
+	}
+
+	.arch-diagram {
+		margin-top: clamp(2rem, 4vw, 3rem);
+		max-width: 46rem;
+	}
+
+	.arch-app,
+	.arch-core,
+	.arch-providers li {
+		border-radius: var(--radius);
+	}
+
+	.arch-app {
+		text-align: center;
+		padding: 0.85rem 1rem;
+		background: rgba(17, 24, 39, 0.7);
+		border: 1px solid var(--c-line-dark);
+		font-weight: 600;
+		font-size: 0.95rem;
+		color: var(--c-ink-dark);
+	}
+
+	.arch-band-label {
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--c-muted-dark);
+		margin-bottom: 0.5rem;
+		text-align: center;
+	}
+
+	.arch-band-label:not(:first-child) {
+		margin-top: 1.5rem;
+	}
+
+	.arch-flow {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.2rem;
+		padding-block: 0.35rem;
+	}
+
+	.arch-line {
+		width: 1px;
+		height: 1.1rem;
+		background: linear-gradient(to bottom, var(--c-muted), transparent);
+	}
+
+	.arch-dir {
+		color: var(--c-muted);
+		font-size: 1rem;
+		line-height: 1;
+	}
+
+	.arch-core {
+		background: var(--c-bg);
+		border: 1px solid rgba(77, 141, 255, 0.4);
+		box-shadow: 0 12px 32px rgba(6, 10, 19, 0.18);
+		padding: 1.5rem;
+		display: grid;
+		grid-template-columns: auto 1fr;
+		gap: 1.5rem;
+		align-items: center;
+	}
+
+	.arch-core-head {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+		padding-right: 1.5rem;
+		border-right: 1px solid var(--c-line-dark);
+	}
+
+	.arch-core-head span {
+		font-family: var(--font-mono);
+		font-weight: 650;
+		font-size: 1.15rem;
+		color: var(--c-ink-dark);
+	}
+
+	.arch-core-head em {
+		font-style: normal;
+		font-size: 0.75rem;
+		color: var(--c-muted-dark);
+	}
+
+	.arch-core-list {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.arch-core-list li {
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		color: var(--c-ink-dark);
+		border: 1px solid var(--c-line-dark);
+		border-radius: 6px;
+		padding: 0.35rem 0.7rem;
+		background: rgba(11, 17, 32, 0.7);
+	}
+
+	.arch-providers {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: 0.75rem;
+	}
+
+	.arch-providers li {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.1rem;
+		padding: 0.9rem 0.5rem;
+		background: rgba(17, 24, 39, 0.7);
+		border: 1px solid var(--c-line-dark);
+		border-top: 2px solid var(--c-accent);
+		text-align: center;
+	}
+
+	.arch-providers span {
+		font-family: var(--font-mono);
+		font-weight: 600;
+		font-size: 0.88rem;
+		color: var(--c-ink-dark);
+	}
+
+	.arch-providers em {
+		font-style: normal;
+		font-size: 0.72rem;
+		color: var(--c-muted-dark);
+	}
+
+	.arch-note {
+		margin-top: 1.5rem;
+		font-size: 0.9rem;
+		color: var(--c-muted-dark);
+		max-width: 42rem;
+	}
+
+	.arch-statement {
+		margin-top: 2rem;
+		font-family: var(--font-mono);
+		font-size: 1.05rem;
+		font-weight: 600;
+		color: var(--c-accent);
+	}
+
+	@media (max-width: 640px) {
+		.arch-core {
+			grid-template-columns: 1fr;
+		}
+
+		.arch-core-head {
+			flex-direction: row;
+			align-items: baseline;
+			gap: 0.5rem;
+			border-right: none;
+			border-bottom: 1px solid var(--c-line-dark);
+			padding-right: 0;
+			padding-bottom: 0.75rem;
+		}
+
+		.arch-providers {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+</style>

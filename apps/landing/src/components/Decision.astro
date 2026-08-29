@@ -1,0 +1,236 @@
+---
+import Icon from './Icon.astro';
+
+const reasons = [
+	{ code: 'HIGH_DSR', line: '0.81 > 0.70' },
+	{ code: 'LOW_CREDIT_SCORE', line: '542 < 600' },
+];
+
+const evidence = ['Identity', 'Credit report', 'Fraud check', 'Score calculation', 'Policy evaluation'];
+---
+
+<section class="section decision" id="decision">
+	<div class="container">
+		<div class="decision-grid">
+			<div class="decision-copy">
+				<div class="section-head">
+					<p class="eyebrow">Example Decision</p>
+					<h2>Not just a decision. An explainable decision.</h2>
+				</div>
+				<p class="decision-lede">
+					Every outcome is paired with the reasons, values, and thresholds
+					that produced it, plus the evidence the decision was built on.
+					Anyone can reconstruct how a decision was reached.
+				</p>
+				<ul class="decision-key">
+					<li>
+						<Icon name="check" size={18} />
+						Structured, machine-readable reasons
+					</li>
+					<li>
+						<Icon name="check" size={18} />
+						Stable reason codes across assessments
+					</li>
+					<li>
+						<Icon name="check" size={18} />
+						Evidence and audit captured per run
+					</li>
+				</ul>
+			</div>
+
+			<div class="decision-card">
+				<div class="decision-card-head">
+					<span class="decision-badge">REJECT</span>
+					<span class="decision-policy">policy&nbsp;<strong>personal-loan-v3</strong></span>
+				</div>
+
+				<h3 class="decision-sub">Reasons</h3>
+				<ul class="decision-reasons">
+					{reasons.map((reason) => (
+						<li>
+							<span class="reason-code">{reason.code}</span>
+							<span class="reason-line">{reason.line}</span>
+						</li>
+					))}
+				</ul>
+
+				<h3 class="decision-sub">Evidence</h3>
+				<ul class="decision-evidence">
+					{evidence.map((item) => (
+						<li>
+							<Icon name="check-circle" size={17} />
+							{item}
+							<span aria-hidden="true"></span>
+						</li>
+					))}
+				</ul>
+
+				<p class="decision-note">Illustrative output.</p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<style>
+	.decision {
+		background: var(--c-bg-elev-light);
+		border-top: 1px solid var(--c-line);
+	}
+
+	.decision-grid {
+		display: grid;
+		grid-template-columns: 0.95fr 1.05fr;
+		gap: clamp(2rem, 5vw, 4rem);
+		align-items: center;
+	}
+
+	.decision-lede {
+		margin-top: 1.25rem;
+		color: var(--c-muted);
+		max-width: 40rem;
+	}
+
+	.decision-key {
+		list-style: none;
+		margin: 1.75rem 0 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+	}
+
+	.decision-key li {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		color: var(--c-ink);
+		font-weight: 500;
+		font-size: 0.95rem;
+	}
+
+	.decision-key svg {
+		color: var(--c-ok);
+		flex: 0 0 auto;
+	}
+
+	.decision-card {
+		background: var(--c-bg);
+		border: 1px solid var(--c-line-dark);
+		border-radius: var(--radius-lg);
+		padding: 1.75rem;
+		box-shadow: 0 20px 48px rgba(6, 10, 19, 0.22);
+		font-family: var(--font-mono);
+	}
+
+	.decision-card-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		flex-wrap: wrap;
+		padding-bottom: 1rem;
+		border-bottom: 1px solid var(--c-line-dark);
+	}
+
+	.decision-badge {
+		display: inline-block;
+		padding: 0.4rem 0.9rem;
+		background: #c53a3a;
+		color: #ffffff;
+		font-weight: 700;
+		font-size: 0.95rem;
+		letter-spacing: 0.06em;
+		border-radius: 6px;
+	}
+
+	.decision-policy {
+		color: var(--c-muted-dark);
+		font-size: 0.8rem;
+	}
+
+	.decision-policy strong {
+		color: var(--c-ink-dark);
+	}
+
+	.decision-sub {
+		font-size: 0.72rem;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--c-muted-dark);
+		margin: 1.25rem 0 0.6rem;
+		font-family: var(--font-sans);
+	}
+
+	.decision-reasons {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+	}
+
+	.decision-reasons li {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 1rem;
+		padding: 0.55rem 0.8rem;
+		background: rgba(11, 17, 32, 0.7);
+		border: 1px solid var(--c-line-dark);
+		border-radius: 6px;
+		font-size: 0.8rem;
+	}
+
+	.reason-code {
+		color: var(--c-ink-dark);
+		font-weight: 600;
+	}
+
+	.reason-line {
+		color: var(--c-muted-dark);
+	}
+
+	.decision-evidence {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 0.45rem 1rem;
+	}
+
+	.decision-evidence li {
+		display: flex;
+		align-items: center;
+		gap: 0.55rem;
+		font-family: var(--font-sans);
+		font-size: 0.9rem;
+		color: var(--c-ink-dark);
+	}
+
+	.decision-evidence svg {
+		color: var(--c-ok);
+		flex: 0 0 auto;
+	}
+
+	.decision-note {
+		margin-top: 1.25rem;
+		font-family: var(--font-sans);
+		font-size: 0.75rem;
+		color: var(--c-muted-dark);
+		text-align: right;
+	}
+
+	@media (max-width: 880px) {
+		.decision-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.decision-evidence {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>
