@@ -1,5 +1,11 @@
 ---
 import { site } from '../site';
+import heroPoster from '../assets/video/credora-hero.webp';
+import heroVideoWebm from '../assets/video/credora-hero.webm';
+import heroVideoMp4 from '../assets/video/credora-hero.mp4';
+const posterSrc = heroPoster.src;
+const videoWebmSrc = heroVideoWebm.src;
+const videoMp4Src = heroVideoMp4.src;
 ---
 
 <section class="hero" id="top">
@@ -28,7 +34,7 @@ import { site } from '../site';
 		     column of the container, contained within the centered composition) -->
 		<div class="hero-visual" aria-hidden="true">
 			<!-- Poster still (shown on mobile and when reduced motion is preferred) -->
-			<img class="hero-poster" src="/video/credora-hero.webp" alt="" width="960" height="540" />
+			<img class="hero-poster" src={posterSrc} alt="" width="960" height="540" />
 			<!-- Animated scene (desktop, motion permitted) -->
 			<video
 				class="hero-video"
@@ -37,10 +43,10 @@ import { site } from '../site';
 				loop
 				playsinline
 				preload="metadata"
-				poster="/video/credora-hero.webp"
+				poster={posterSrc}
 			>
-				<source src="/video/credora-hero.webm" type="video/webm" />
-				<source src="/video/credora-hero.mp4" type="video/mp4" />
+				<source src={heroVideoWebm} type="video/webm" />
+				<source src={heroVideoMp4} type="video/mp4" />
 			</video>
 		</div>
 	</div>

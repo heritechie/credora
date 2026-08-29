@@ -1,6 +1,8 @@
 ---
 import '../styles/global.css';
 import { site } from '../site';
+import faviconSvg from '../assets/favicon.svg';
+import faviconIco from '../assets/favicon.ico';
 
 interface Props {
 	title?: string;
@@ -8,6 +10,8 @@ interface Props {
 }
 
 const { title = site.name, description = site.description } = Astro.props;
+const faviconSvgSrc = faviconSvg.src;
+const faviconIcoSrc = faviconIco;
 ---
 
 <!doctype html>
@@ -20,8 +24,8 @@ const { title = site.name, description = site.description } = Astro.props;
 		<meta name="theme-color" content="#060a13" />
 		<meta name="generator" content={Astro.generator} />
 
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
+		<link rel="icon" type="image/svg+xml" href={faviconSvgSrc} />
+		<link rel="icon" href={faviconIcoSrc} />
 
 		<!-- Open Graph / social -->
 		<meta property="og:type" content="website" />
