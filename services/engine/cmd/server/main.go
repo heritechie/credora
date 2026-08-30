@@ -57,6 +57,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", handleHealth)
 	handler.RegisterRoutes(mux)
+	apihttp.RegisterDocsRoutes(mux)
 
 	srv := &http.Server{
 		Addr:    ":" + port,

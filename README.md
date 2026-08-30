@@ -36,6 +36,25 @@ make dev
 
 See `docs/` for architecture and developer documentation.
 
+## API Documentation
+
+Run the engine:
+
+```bash
+cd services/engine
+go run ./cmd/server
+```
+
+Then open:
+
+http://localhost:8080/docs
+
+The interactive documentation is powered by [Scalar](https://scalar.com/) and follows the [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0) specification.
+
+You can also access the raw OpenAPI specification at:
+
+http://localhost:8080/openapi.yaml
+
 ## License
 
 Apache License 2.0. See [LICENSE](LICENSE).

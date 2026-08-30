@@ -1,0 +1,593 @@
+openapi: 3.1.0
+info:
+  title: Credora Engine API
+  description: |
+    Open-source credit decisioning infrastructure.
+
+    Credora is an infrastructure layer for orchestrating credit assessment workflows
+    using customer-selected providers, deterministic policies, scoring, evidence,
+    and audit trails.
+
+    ## Assessment Lifecycle
+
+    1. Create an assessment with applicant data
+    2. Policy is evaluated (knockouts, rules, score thresholds)
+    3. Decision is produced (APPROVE, REVIEW, or REJECT)
+    4. Evidence and audit trail are recorded
+
+    ## Policy Selection
+
+    Policy identity consists of policy ID + version. If omitted from the request,
+    the default policy (`personal-loan` v1) is used.
+
+    ## Monetary Values
+
+    All monetary values use the smallest currency unit (e.g., cents, sen).
+  version: "1.0.0"
+  contact:
+    name: Credora
+    url: https://github.com/credora/credora
+  license:
+    name: Apache License 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+paths:
+  /health:
+    get:
+      operationId: healthCheck
+      summary: Health check
+      description: Returns the health status of the engine.
+      tags:
+        - System
+      responses:
+        "200":
+          description: Engine is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /api/v1/assessments:
+    post:
+      operationId: createAssessment
+      summary: Create an assessment
+      description: |
+        Creates a new assessment and evaluates it against the specified policy.
+
+        The assessment lifecycle runs synchronously: PENDING -> RUNNING -> COMPLETED/FAILED.
+
+        ### Policy Selection
+
+        If `policy` is omitted, the default policy (`personal-loan` v1) is used.
+        To use a specific policy, provide `policy.id` and `policy.version`.
+
+        ### Application is Optional
+
+        An assessment can be created without an application (e.g., for limit assessment
+        or pre-screening). If `application` is provided, `requested_amount` is optional.
+      tags:
+        - Assessments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAssessmentRequest"
+            examples:
+              limit-assessment:
+                summary: Limit assessment (no application)
+                value:
+                  applicant:
+                    id: applicant-001
+                    name: Example Applicant
+                    age: 35
+                  policy:
+                    id: personal-loan
+                    version: 1
+              loan-application:
+                summary: Loan application with score
+                value:
+                  applicant:
+                    id: applicant-001
+                    name: Example Applicant
+                    age: 35
+                  application:
+                    id: application-001
+                    requested_amount: 10000000
+                    purpose: working_capital
+                  score:
+                    value: 720
+                    provider: mock-credit-bureau
+                  policy:
+                    id: personal-loan
+                    version: 1
+      responses:
+        "201":
+          description: Assessment created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssessmentResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                invalid-json:
+                  summary: Invalid JSON payload
+                  value:
+                    error: invalid JSON payload
+                    code: INVALID_REQUEST
+                validation-error:
+                  summary: Validation error
+                  value:
+                    error: applicant.id is required
+                    code: VALIDATION_ERROR
+        "500":
+          description: Evaluation failure
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: assessment evaluation failed
+                code: EVALUATION_ERROR
+
+  /api/v1/assessments/{id}:
+    get:
+      operationId: getAssessment
+      summary: Get an assessment
+      description: Retrieves an assessment by its ID, including decision and evidence if available.
+      tags:
+        - Assessments
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The assessment ID
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Assessment found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssessmentResponse"
+        "404":
+          description: Assessment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: assessment not found
+                code: NOT_FOUND
+
+  /api/v1/assessments/{id}/decision:
+    get:
+      operationId: getDecision
+      summary: Get assessment decision
+      description: |
+        Retrieves the decision for an assessment.
+
+        The decision includes:
+        - Outcome (APPROVE, REVIEW, or REJECT)
+        - Structured reasons explaining the decision
+        - Decision outputs (credit limit, approved amount)
+        - Policy identity used for evaluation
+      tags:
+        - Assessments
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The assessment ID
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Decision found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DecisionResponse"
+              examples:
+                approve:
+                  summary: Approved assessment
+                  value:
+                    outcome: APPROVE
+                    reasons: []
+                    policy:
+                      id: personal-loan
+                      version: 1
+                reject:
+                  summary: Rejected assessment
+                  value:
+                    outcome: REJECT
+                    reasons:
+                      - code: LOW_CREDIT_SCORE
+                        description: Credit score is below the minimum threshold
+                        value: 600
+                        threshold: 650
+                        evidence_ref: LOW_CREDIT_SCORE
+                    policy:
+                      id: personal-loan
+                      version: 1
+                with-outputs:
+                  summary: Assessment with credit limit output
+                  value:
+                    outcome: APPROVE
+                    reasons: []
+                    outputs:
+                      credit_limit: 15000000
+                      approved_amount: null
+                    policy:
+                      id: personal-loan
+                      version: 1
+        "404":
+          description: Assessment or decision not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                assessment-not-found:
+                  summary: Assessment not found
+                  value:
+                    error: assessment not found
+                    code: NOT_FOUND
+                decision-not-available:
+                  summary: Decision not yet available
+                  value:
+                    error: decision not yet available
+                    code: NOT_FOUND
+
+  /api/v1/assessments/{id}/evidence:
+    get:
+      operationId: getEvidence
+      summary: Get assessment evidence
+      description: |
+        Retrieves the evidence collected during policy evaluation.
+
+        Evidence captures the provenance of values used in decisioning:
+        - Which provider or rule produced the value
+        - When it was retrieved
+        - How it references the decision reasons
+      tags:
+        - Assessments
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The assessment ID
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Evidence entries found
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EvidenceEntry"
+              example:
+                - source: rule
+                  field: AGE_BELOW_MINIMUM
+                  value: false
+                  retrieved_at: "2025-01-15T10:30:00Z"
+                  reference: AGE_BELOW_MINIMUM
+                - source: rule
+                  field: HIGH_REQUEST_AMOUNT
+                  value: false
+                  retrieved_at: "2025-01-15T10:30:00Z"
+                  reference: HIGH_REQUEST_AMOUNT
+        "404":
+          description: Assessment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: assessment not found
+                code: NOT_FOUND
+
+components:
+  schemas:
+    CreateAssessmentRequest:
+      type: object
+      description: Request to create a new assessment
+      required:
+        - applicant
+      properties:
+        applicant:
+          $ref: "#/components/schemas/ApplicantInput"
+        application:
+          $ref: "#/components/schemas/ApplicationInput"
+        score:
+          $ref: "#/components/schemas/ScoreInput"
+        policy:
+          $ref: "#/components/schemas/PolicyInput"
+
+    ApplicantInput:
+      type: object
+      description: The applicant being assessed
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          description: Unique applicant identifier
+          example: applicant-001
+        name:
+          type: string
+          description: Applicant name
+          example: John Doe
+        age:
+          type: integer
+          description: Applicant age
+          example: 35
+
+    ApplicationInput:
+      type: object
+      description: |
+        The credit application. Optional: assessments can be created without an application.
+        If provided, `requested_amount` is optional.
+      properties:
+        id:
+          type: string
+          description: Unique application identifier
+          example: application-001
+        requested_amount:
+          type: integer
+          format: int64
+          nullable: true
+          description: |
+            Amount requested in smallest currency unit (e.g., cents).
+            Optional: not all assessment types require a requested amount.
+          example: 10000000
+        purpose:
+          type: string
+          description: Purpose of the credit
+          example: working_capital
+
+    ScoreInput:
+      type: object
+      description: Optional credit score input
+      properties:
+        value:
+          type: integer
+          description: Numeric score value
+          example: 720
+        provider:
+          type: string
+          description: Source of the score
+          example: mock-credit-bureau
+
+    PolicyInput:
+      type: object
+      description: |
+        Policy selection. If omitted, defaults to `personal-loan` v1.
+        Policy identity is: policy ID + version.
+      properties:
+        id:
+          type: string
+          description: Policy identifier
+          example: personal-loan
+        version:
+          type: integer
+          description: Policy version number
+          example: 1
+
+    AssessmentResponse:
+      type: object
+      description: Assessment with lifecycle state and results
+      properties:
+        id:
+          type: string
+          description: Unique assessment identifier
+          example: "9f35cddd0cba4d99b86229d9e83e5e34"
+        status:
+          type: string
+          enum:
+            - PENDING
+            - RUNNING
+            - COMPLETED
+            - FAILED
+          description: Assessment lifecycle state
+          example: COMPLETED
+        applicant:
+          $ref: "#/components/schemas/ApplicantDTO"
+        application:
+          $ref: "#/components/schemas/ApplicationDTO"
+        score:
+          $ref: "#/components/schemas/ScoreDTO"
+        policy:
+          $ref: "#/components/schemas/PolicyDTO"
+        decision:
+          $ref: "#/components/schemas/DecisionResponse"
+        error:
+          type: string
+          description: Error message if assessment failed
+          example: ""
+        created_at:
+          type: string
+          format: date-time
+          description: When the assessment was created
+          example: "2025-01-15T10:30:00Z"
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: When evaluation started
+          example: "2025-01-15T10:30:00Z"
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: When evaluation completed
+          example: "2025-01-15T10:30:01Z"
+
+    ApplicantDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          example: applicant-001
+        name:
+          type: string
+          example: John Doe
+        age:
+          type: integer
+          example: 35
+
+    ApplicationDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          example: application-001
+        requested_amount:
+          type: integer
+          format: int64
+          nullable: true
+          description: Requested amount in smallest currency unit (null if not provided)
+          example: 10000000
+        purpose:
+          type: string
+          example: working_capital
+
+    ScoreDTO:
+      type: object
+      properties:
+        value:
+          type: integer
+          example: 720
+        provider:
+          type: string
+          example: mock-credit-bureau
+
+    PolicyDTO:
+      type: object
+      description: Policy identity used for evaluation
+      properties:
+        id:
+          type: string
+          example: personal-loan
+        version:
+          type: integer
+          example: 1
+
+    DecisionResponse:
+      type: object
+      description: Policy evaluation result
+      properties:
+        outcome:
+          type: string
+          enum:
+            - APPROVE
+            - REVIEW
+            - REJECT
+          description: Business decision outcome
+          example: APPROVE
+        reasons:
+          type: array
+          description: Structured reasons explaining the decision
+          items:
+            $ref: "#/components/schemas/ReasonEntry"
+        outputs:
+          $ref: "#/components/schemas/DecisionOutputs"
+        policy:
+          $ref: "#/components/schemas/PolicyDTO"
+
+    DecisionOutputs:
+      type: object
+      description: |
+        Policy-produced values (e.g., credit limit, approved amount).
+        These are decision outputs, not inputs. Null fields indicate
+        the policy did not produce that output.
+      properties:
+        credit_limit:
+          type: integer
+          format: int64
+          nullable: true
+          description: Credit limit determined by policy (in smallest currency unit)
+          example: 15000000
+        approved_amount:
+          type: integer
+          format: int64
+          nullable: true
+          description: Approved loan amount (in smallest currency unit)
+          example: null
+
+    ReasonEntry:
+      type: object
+      description: Structured reason explaining a decision
+      properties:
+        code:
+          type: string
+          description: Stable reason code
+          example: LOW_CREDIT_SCORE
+        description:
+          type: string
+          description: Human-readable reason description
+          example: Credit score is below the minimum threshold
+        value:
+          description: Actual value observed (from condition evaluation)
+          example: 600
+        threshold:
+          description: Threshold compared against
+          example: 650
+        evidence_ref:
+          type: string
+          description: Reference to supporting evidence
+          example: LOW_CREDIT_SCORE
+
+    EvidenceEntry:
+      type: object
+      description: Provenance of a value used in decisioning
+      properties:
+        source:
+          type: string
+          description: What produced this evidence (rule, knockout, provider)
+          example: rule
+        field:
+          type: string
+          description: What field this relates to (rule/knockout code)
+          example: LOW_CREDIT_SCORE
+        value:
+          description: The evaluation result
+          example: false
+        retrieved_at:
+          type: string
+          format: date-time
+          description: When this evidence was produced
+          example: "2025-01-15T10:30:00Z"
+        reference:
+          type: string
+          description: ID/code of the source
+          example: LOW_CREDIT_SCORE
+
+    ErrorResponse:
+      type: object
+      description: Error response
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+          example: assessment not found
+        code:
+          type: string
+          description: Machine-readable error code
+          example: NOT_FOUND
