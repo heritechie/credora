@@ -12,7 +12,7 @@ Principle:
 
 > Your providers. Your keys. Your decisions.
 
-Credora is an infrastructure/orchestration layer for building and executing credit assessment workflows using providers and data sources controlled by the customer.
+Credora is an infrastructure/orchestration layer for building and executing credit assessment workflows using providers and data sources chosen by the customer.
 
 Credora is NOT:
 
@@ -23,7 +23,9 @@ Credora is NOT:
 - a proprietary scoring provider
 - a provider marketplace
 - a loan origination system
+- a CRM
 - a generic workflow automation platform
+- an AI platform
 
 ---
 
@@ -33,21 +35,88 @@ Everything in the core engine should support this loop:
 
 ```text
 Define assessment
-    ↓
-Execute workflow
-    ↓
-Collect provider data
-    ↓
-Evaluate policy
-    ↓
-Produce decision
-    ↓
-Collect evidence
-    ↓
-Record audit trail
+→ execute workflow
+→ collect provider/data results
+→ evaluate knockout conditions
+→ calculate/evaluate credit score
+→ evaluate policy/rules
+→ produce decision
+→ collect evidence
+→ record audit trail
 ```
 
 The primary product outcome is a reliable credit decision with explainable evidence.
+
+Anything outside this loop requires explicit justification.
+
+---
+
+## v0 Objective
+
+Credora v0 succeeds if a developer can:
+
+1. Run Credora locally.
+2. Define an assessment.
+3. Configure mock providers.
+4. Execute an assessment.
+5. Handle provider failures and retries.
+6. Evaluate deterministic credit rules.
+7. Evaluate knockout conditions.
+8. Produce:
+   - APPROVE
+   - REVIEW
+   - REJECT
+9. Explain why the decision was produced.
+10. Inspect evidence and audit history.
+
+Do not optimize v0 for enterprise administration, SaaS operations, or monetization.
+
+Everything else is secondary.
+
+---
+
+## Product Direction
+
+Credora should eventually become a playground for:
+
+- credit analysts
+- risk analysts
+- underwriting teams
+- risk engineering teams
+
+Users should be able to experiment with and evaluate credit decision policies using their own rules and parameters.
+
+The engine must therefore avoid hard-coding a single company's credit policy.
+
+Credit rules should be configurable and deterministic.
+
+Do not assume that one company's credit policy represents the universal definition of credit decisioning.
+
+---
+
+## Domain Concepts
+
+The core domain includes:
+
+- Assessment
+- Applicant
+- Application
+- Provider
+- Provider Result
+- Credit Score
+- Rule
+- Policy
+- Policy Version
+- Knockout
+- Decision
+- Decision Reason
+- Evidence
+- Audit Event
+- Backtest
+
+These concepts should remain explicit in the domain model.
+
+Avoid collapsing everything into a generic "workflow" abstraction.
 
 ---
 
@@ -175,6 +244,7 @@ Examples include:
 - credit bureaus
 - fraud providers
 - scoring services
+- income providers
 - other external data providers
 
 The domain depends on interfaces.
@@ -201,6 +271,8 @@ Provider adapters are responsible for:
 - normalization into Credora domain types
 
 The rest of Credora should not depend on provider-specific response formats.
+
+Use mock providers during early development.
 
 ---
 
@@ -265,47 +337,129 @@ Never represent a technical execution failure as `REJECT`.
 
 ---
 
-## Decisioning
+## Credit Score
 
-Decisioning must be deterministic and explainable.
+Credit Score is a domain concept representing a quantitative assessment used by a credit policy.
 
-Every final decision should have structured reasons.
+Credora should NOT initially implement a proprietary machine-learning credit scoring model.
 
-Example:
+Credora should support:
 
-```json
-{
-  "decision": "REJECT",
-  "reasons": [
-    {
-      "code": "HIGH_DSR",
-      "value": 0.81,
-      "threshold": 0.7
-    }
-  ],
-  "policy": "personal-loan-v3"
+- externally calculated scores
+- customer-defined score calculations
+- deterministic score rules
+- provider-derived scores
+
+The exact scoring methodology must be configurable and documented.
+
+Do not invent a universal credit-score formula.
+
+Keep scoring behind an interface:
+
+```go
+type Scorer interface {
+    Calculate(
+        ctx context.Context,
+        input ScoreInput,
+    ) (ScoreResult, error)
 }
 ```
 
-Reason codes should be stable identifiers.
+Mock/deterministic scoring is sufficient for the MVP.
 
-Examples:
+Customers should eventually be able to bring their own scoring model or service.
 
-```text
-HIGH_DSR
-LOW_CREDIT_SCORE
-HIGH_FRAUD_SCORE
-IDENTITY_FAILED
-PROVIDER_ERROR
-```
+---
 
-Avoid returning only free-form human-readable explanations.
+## DSR
+
+DSR (Debt Service Ratio) is a domain concept representing the relationship between debt-service obligations and the income measure used by a credit policy.
+
+Credora must document:
+
+- definition
+- numerator
+- denominator
+- treatment of monthly obligations
+- treatment of income
+- unit/period assumptions
+- edge cases
+- interpretation
+
+Do not silently assume that every organization calculates DSR identically.
+
+Different policies may define the underlying income and debt components differently.
+
+The implementation must keep these assumptions explicit.
+
+---
+
+## Knockout
+
+Knockout is a decisioning mechanism where a condition causes an application to become ineligible or otherwise prevents normal progression through the policy.
+
+Knockout conditions must have:
+
+- stable rule/code
+- description
+- condition
+- reason code
+- evidence
+- deterministic outcome
+
+Do not copy proprietary knockout rules from any employer or external organization.
+
+Use generic examples only.
+
+A knockout should remain distinguishable from an ordinary scoring/ranking rule.
+
+---
+
+## Rules
+
+Rules are deterministic policy conditions used to evaluate an assessment.
+
+A rule should have concepts such as:
+
+- stable ID/code
+- human-readable description
+- condition
+- parameters
+- outcome
+- reason code
+- evidence/reference
+
+Do NOT introduce a complicated custom DSL unless there is a demonstrated need.
+
+Prefer a small, strongly typed representation initially.
+
+Rules must be:
+
+- deterministic
+- testable
+- explainable
+- versionable
 
 ---
 
 ## Policy
 
-Policies are deterministic.
+A Policy represents a versioned collection of decisioning logic.
+
+A policy should define:
+
+- policy ID
+- version
+- rules
+- knockout conditions
+- score configuration
+- decision behavior
+
+Policy evaluation must be reproducible.
+
+A historical assessment must be explainable using the policy version that produced its decision.
+
+Never silently evaluate historical data using the current policy version.
 
 Policy evaluation should be isolated behind an interface.
 
@@ -335,26 +489,51 @@ Start with explicit Go policies.
 
 ---
 
-## Scoring
+## Decisioning
 
-Credora does not initially provide a proprietary machine-learning scoring model.
+Decisioning must be deterministic and explainable.
 
-Scoring is one component of the decisioning pipeline.
+Supported initial decisions:
 
-Keep scoring behind an interface:
+- APPROVE
+- REVIEW
+- REJECT
 
-```go
-type Scorer interface {
-    Calculate(
-        ctx context.Context,
-        input ScoreInput,
-    ) (ScoreResult, error)
+Every final decision should have structured reasons.
+
+Conceptual example:
+
+```json
+{
+  "decision": "REJECT",
+  "reasons": [
+    {
+      "code": "HIGH_DSR",
+      "description": "Debt service ratio exceeds policy threshold",
+      "value": 0.81,
+      "threshold": 0.70
+    }
+  ],
+  "policy": {
+    "id": "personal-loan",
+    "version": 3
+  }
 }
 ```
 
-Mock/deterministic scoring is sufficient for the MVP.
+Reason codes should be stable identifiers.
 
-Customers should eventually be able to bring their own scoring model or service.
+Examples:
+
+```text
+HIGH_DSR
+LOW_CREDIT_SCORE
+HIGH_FRAUD_SCORE
+IDENTITY_FAILED
+PROVIDER_ERROR
+```
+
+Avoid returning only a boolean or opaque score without explanation.
 
 ---
 
@@ -362,25 +541,106 @@ Customers should eventually be able to bring their own scoring model or service.
 
 Evidence is first-class.
 
+Evidence should allow the system to explain:
+
+- where a value came from
+- which provider produced it
+- when it was retrieved
+- which rule used it
+- which decision reason references it
+
 Provider outputs and important decision inputs should be captured as evidence.
 
-Examples:
+Conceptual example:
 
-```text
-IDENTITY_RESULT
-CREDIT_REPORT
-FRAUD_RESULT
-SCORE_RESULT
-POLICY_RESULT
+```json
+{
+  "source": "credit_provider",
+  "field": "monthly_obligation",
+  "value": 3500000,
+  "retrieved_at": "...",
+  "reference": "provider-result-id"
+}
 ```
 
-Evidence should allow a developer/operator to understand how a decision was produced.
+Do not store unexplained decision outputs without their supporting evidence.
 
 Use structured data.
 
 PostgreSQL JSONB is acceptable for provider/evidence payloads.
 
 Do not store unnecessary PII.
+
+---
+
+## Backtesting
+
+Backtesting is a planned core capability.
+
+The goal is to allow credit/risk users to test a decision policy against historical/real production data.
+
+Example:
+
+```text
+Historical applications
+→ Policy v1
+→ Policy v2
+→ Policy v3
+→ compare decisions and outcomes
+```
+
+Backtesting should eventually answer questions such as:
+
+- How many applications would be approved?
+- How many would be rejected?
+- Which applications changed decision?
+- Which rules caused the changes?
+- What would approval/rejection rates look like under another policy?
+- How does a new policy compare to a previous policy?
+
+IMPORTANT:
+
+Backtesting must use the same deterministic policy evaluation engine as live decisioning.
+
+Do not create a separate rule implementation for backtesting.
+
+Backtesting is NOT part of the first implementation unless explicitly requested.
+
+Design the engine so policy evaluation can later accept both:
+
+- live assessment data
+- historical assessment data
+
+Do not put live-only assumptions inside the policy evaluator.
+
+---
+
+## Explainability
+
+Every decision should be explainable.
+
+Prefer structured reasons:
+
+```json
+{
+  "code": "...",
+  "description": "...",
+  "value": "...",
+  "threshold": "...",
+  "evidence": "..."
+}
+```
+
+Avoid opaque responses such as:
+
+```json
+{
+  "score": 712,
+  "decision": "REJECT"
+}
+```
+
+without explanation.
 
 ---
 
@@ -457,18 +717,24 @@ Prefer simple deterministic behavior.
 
 ## Security
 
-Treat credit data as sensitive.
+Treat the following as sensitive:
 
-Never log:
+- API credentials
+- PII
+- financial data
+- credit data
+- identity data
+- provider responses
 
-- API keys
-- passwords
-- tokens
-- national ID numbers
-- unnecessary PII
-- complete provider credentials
+Never:
 
-Be conservative with logs.
+- hard-code secrets
+- commit credentials
+- log API keys
+- unnecessarily log raw PII
+- expose provider credentials to clients
+
+Security-sensitive decisions must be explicit.
 
 Configuration must come from environment/configuration rather than source code.
 
@@ -527,16 +793,20 @@ Handlers must not contain:
 
 ## Testing
 
-Tests are part of the implementation, not a later step.
+Credit decisioning logic requires strong deterministic tests.
 
 Required coverage includes:
 
 ### Unit tests
 
-- policy evaluation
+- rule evaluation
+- knockout evaluation
 - score calculation
-- decision reasons
-- assessment orchestration
+- decision aggregation
+- policy versioning
+- explainability
+- evidence references
+- deterministic repeated execution
 - provider failures
 
 ### Integration tests
@@ -556,12 +826,15 @@ create
 → identity
 → credit
 → fraud
+→ knockout
 → score
 → policy
 → decision
 → evidence
 → audit
 ```
+
+Prefer table-driven tests in Go where appropriate.
 
 ---
 
@@ -583,6 +856,28 @@ assessment.failed
 ```
 
 Do not add a complex observability stack during MVP.
+
+---
+
+## Documentation
+
+Domain documentation is important.
+
+Document explicitly:
+
+- DSR
+- Credit Score
+- Rule
+- Policy
+- Policy Version
+- Knockout
+- Decision
+- Evidence
+- Backtest
+
+Definitions must be Credora's documented domain definitions.
+
+Do not present assumptions from a particular employer or provider as universal industry truth.
 
 ---
 
@@ -640,11 +935,11 @@ The landing page must not dictate domain architecture.
 Before implementing a feature, ask:
 
 1. Does it improve the core credit decisioning loop?
-2. Does a developer need it to execute an assessment?
-3. Does it improve reliability?
-4. Does it improve explainability or evidence?
-5. Does it improve provider abstraction?
-6. Does it materially improve OSS developer experience?
+2. Does a developer, credit analyst, or risk team need it?
+3. Does it improve explainability or reproducibility?
+4. Does it improve provider abstraction?
+5. Is the complexity justified?
+6. Can a simpler implementation achieve the same result?
 
 If the answer is mostly "no", defer the feature.
 
@@ -665,6 +960,13 @@ Explicitly defer:
 - notification systems
 - analytics platform
 - generic workflow builder
+- CRM
+- LOS
+- generic AI platform
+- proprietary ML scoring platform
+- cloud management platform
+
+unless explicitly approved.
 
 ---
 
@@ -700,6 +1002,25 @@ Prefer fewer dependencies.
 
 ---
 
+## Development Workflow
+
+Before implementing a feature:
+
+1. Inspect the existing code.
+2. Understand existing domain boundaries.
+3. Prefer the smallest viable implementation.
+4. Write tests for domain behavior.
+5. Implement.
+6. Run formatting.
+7. Run tests.
+8. Run static analysis where applicable.
+9. Review the diff.
+10. Report what changed and what was intentionally deferred.
+
+Do not commit or push changes unless explicitly requested.
+
+---
+
 ## Developer Experience
 
 A developer should eventually be able to:
@@ -723,22 +1044,28 @@ Prefer:
 
 ---
 
-## Current MVP Definition
+## Current Phase
 
-Credora v0.1 succeeds when a developer can:
+The immediate focus is:
 
-1. Run Credora locally.
-2. Define an assessment.
-3. Configure provider implementations.
-4. Execute an assessment.
-5. Handle provider failures.
-6. Apply deterministic policies.
-7. Produce APPROVE / REVIEW / REJECT.
-8. Explain the decision.
-9. Inspect evidence.
-10. Inspect the audit trail.
+Credora v0 domain and decision engine foundation.
 
-Everything else is secondary.
+Priorities:
+
+1. domain model
+2. deterministic rule evaluation
+3. knockout evaluation
+4. score handling
+5. policy/versioning
+6. decision aggregation
+7. evidence
+8. audit trail
+9. mock providers
+10. reliable assessment execution
+
+Backtesting is a planned capability and should influence the architecture, but should not cause premature implementation complexity.
+
+Do not build a UI or SaaS layer before the core engine is credible.
 
 ---
 

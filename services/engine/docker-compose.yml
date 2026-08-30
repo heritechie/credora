@@ -1,0 +1,27 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: credora
+      POSTGRES_PASSWORD: credora
+      POSTGRES_DB: credora
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgres://credora:credora@postgres:5432/credora
+      HTTP_PORT: "8080"
+      LOG_LEVEL: info
+    depends_on:
+      - postgres
+
+volumes:
+  pgdata:

@@ -1,7 +1,7 @@
 ENGINE := services/engine
 LANDING := apps/landing
 
-.PHONY: setup dev test build lint
+.PHONY: setup dev test build lint migrate docker-up docker-down
 
 setup:
 	cd $(LANDING) && npm install
@@ -23,3 +23,12 @@ build:
 
 lint:
 	cd $(ENGINE) && go vet ./...
+
+migrate:
+	cd $(ENGINE) && go run -run=Migrate ./cmd/server
+
+docker-up:
+	cd $(ENGINE) && docker compose up -d
+
+docker-down:
+	cd $(ENGINE) && docker compose down

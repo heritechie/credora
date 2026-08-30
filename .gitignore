@@ -20,3 +20,9 @@ dist/
 # OS
 .DS_Store
 Thumbs.db
+
+# SQLite
+*.db
+*.db-shm
+*.db-wal
+services/engine/data/
