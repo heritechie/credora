@@ -9,19 +9,22 @@ import (
 
 	"credora/internal/assessment"
 	"credora/internal/domain"
+	"credora/internal/repository"
 )
 
 // Handler provides HTTP handlers for the assessment API.
 type Handler struct {
-	svc    *assessment.Service
-	logger *slog.Logger
+	svc        *assessment.Service
+	policyRepo repository.PolicyRepository
+	logger     *slog.Logger
 }
 
 // NewHandler creates a new HTTP handler.
-func NewHandler(svc *assessment.Service, logger *slog.Logger) *Handler {
+func NewHandler(svc *assessment.Service, policyRepo repository.PolicyRepository, logger *slog.Logger) *Handler {
 	return &Handler{
-		svc:    svc,
-		logger: logger,
+		svc:        svc,
+		policyRepo: policyRepo,
+		logger:     logger,
 	}
 }
 
@@ -31,6 +34,8 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/assessments/{id}", h.GetAssessment)
 	mux.HandleFunc("GET /api/v1/assessments/{id}/decision", h.GetDecision)
 	mux.HandleFunc("GET /api/v1/assessments/{id}/evidence", h.GetEvidence)
+	mux.HandleFunc("GET /api/v1/assessments", h.GetAssessments)
+	mux.HandleFunc("GET /api/v1/policies", h.GetPolicies)
 }
 
 // CreateAssessment handles POST /api/v1/assessments.
@@ -47,9 +52,11 @@ func (h *Handler) CreateAssessment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	createReq := assessment.CreateRequest{
-		ApplicantID:   req.Applicant.ID,
-		ApplicantName: req.Applicant.Name,
-		ApplicantAge:  req.Applicant.Age,
+		ApplicantID:        req.Applicant.ID,
+		ApplicantName:      req.Applicant.Name,
+		ApplicantAge:       req.Applicant.Age,
+		MonthlyIncome:      req.MonthlyIncome,
+		MonthlyObligations: req.MonthlyObligations,
 	}
 
 	if req.Application != nil {
@@ -176,6 +183,73 @@ func (h *Handler) GetEvidence(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.writeJSON(w, http.StatusOK, evidence)
+}
+
+// GetAssessments handles GET /api/v1/assessments.
+func (h *Handler) GetAssessments(w http.ResponseWriter, r *http.Request) {
+	limit := 0
+	offset := 0
+
+	assessments, err := h.svc.List(r.Context(), limit, offset)
+	if err != nil {
+		h.logger.Error("failed to list assessments",
+			"error", err,
+		)
+		h.writeError(w, http.StatusInternalServerError, "REPOSITORY_ERROR", "failed to retrieve assessments")
+		return
+	}
+
+	items := make([]AssessmentListItem, 0, len(assessments))
+	for _, a := range assessments {
+		item := AssessmentListItem{
+			ID:        a.ID,
+			Status:    a.Status.String(),
+			Policy:    PolicyDTO{ID: a.PolicyID, Version: a.PolicyVersion},
+			CreatedAt: a.CreatedAt,
+		}
+
+		if a.Decision != nil {
+			item.Decision = &DecisionList{
+				Outcome: a.Decision.Outcome.String(),
+			}
+		}
+
+		if a.CompletedAt != nil {
+			item.CompletedAt = a.CompletedAt
+		}
+
+		items = append(items, item)
+	}
+
+	h.writeJSON(w, http.StatusOK, AssessmentListResponse{
+		Items: items,
+	})
+}
+
+// GetPolicies handles GET /api/v1/policies.
+func (h *Handler) GetPolicies(w http.ResponseWriter, r *http.Request) {
+	metas, err := h.policyRepo.List(r.Context())
+	if err != nil {
+		h.logger.Error("failed to list policies",
+			"error", err,
+		)
+		h.writeError(w, http.StatusInternalServerError, "REPOSITORY_ERROR", "failed to retrieve policies")
+		return
+	}
+
+	items := make([]PolicyListItem, 0, len(metas))
+	for _, m := range metas {
+		items = append(items, PolicyListItem{
+			ID:          m.ID,
+			Version:     m.Version,
+			Description: m.Description,
+			Status:      "active",
+		})
+	}
+
+	h.writeJSON(w, http.StatusOK, PolicyListResponse{
+		Items: items,
+	})
 }
 
 func (h *Handler) validateCreateRequest(req CreateAssessmentRequest) error {

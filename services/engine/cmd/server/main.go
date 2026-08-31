@@ -51,8 +51,8 @@ func main() {
 	// Application service
 	svc := assessment.NewService(assessmentRepo, registry, logger)
 
-	// HTTP handler (no longer holds a hardcoded policy)
-	handler := apihttp.NewHandler(svc, logger)
+	// HTTP handler
+	handler := apihttp.NewHandler(svc, policyRepo, logger)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", handleHealth)

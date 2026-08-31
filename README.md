@@ -19,6 +19,7 @@ Credora is NOT:
 ```text
 apps/
   landing/          Astro landing page
+  workspace/        Decisioning Workspace (Preact)
 services/
   engine/           Go decisioning engine
 examples/

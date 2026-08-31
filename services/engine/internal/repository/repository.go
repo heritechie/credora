@@ -16,6 +16,9 @@ type AssessmentRepository interface {
 	Create(ctx context.Context, assessment domain.Assessment) error
 	GetByID(ctx context.Context, id string) (domain.Assessment, error)
 	Update(ctx context.Context, assessment domain.Assessment) error
+	// List retrieves assessments with basic pagination.
+	// If limit and offset are both 0, all assessments are returned.
+	List(ctx context.Context, limit, offset int) ([]domain.Assessment, error)
 }
 
 // PolicyMetadata represents persistable policy metadata.
@@ -43,4 +46,7 @@ type PolicyRepository interface {
 
 	// Exists reports whether a policy with the given ID and version exists.
 	Exists(ctx context.Context, id string, version int) (bool, error)
+
+	// List retrieves all policy metadata entries.
+	List(ctx context.Context) ([]PolicyMetadata, error)
 }

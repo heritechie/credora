@@ -109,7 +109,7 @@ func setupSQLiteTestHandler(t *testing.T) (*Handler, http.Handler) {
 	})
 
 	svc := assessment.NewService(repo, registry, logger)
-	handler := NewHandler(svc, logger)
+	handler := NewHandler(svc, policyRepo, logger)
 	mux := http.NewServeMux()
 	handler.RegisterRoutes(mux)
 	return handler, mux

@@ -56,3 +56,27 @@ func (r *SQLitePolicyRepository) Exists(ctx context.Context, id string, version 
 	}
 	return count > 0, nil
 }
+
+func (r *SQLitePolicyRepository) List(ctx context.Context) ([]PolicyMetadata, error) {
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT id, version, name, description
+		FROM policies ORDER BY id, version`)
+	if err != nil {
+		return nil, fmt.Errorf("list policies: %w", err)
+	}
+	defer rows.Close()
+
+	var metas []PolicyMetadata
+	for rows.Next() {
+		var meta PolicyMetadata
+		if err := rows.Scan(&meta.ID, &meta.Version, &meta.Name, &meta.Description); err != nil {
+			return nil, fmt.Errorf("scan policy: %w", err)
+		}
+		metas = append(metas, meta)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("list iterations: %w", err)
+	}
+
+	return metas, nil
+}

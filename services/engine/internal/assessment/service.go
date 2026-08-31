@@ -54,6 +54,11 @@ type CreateRequest struct {
 	ScoreProvider *string
 	PolicyID      string // policy ID to use (resolved by caller)
 	PolicyVersion int    // policy version to use (resolved by caller)
+
+	// MonthlyIncome and MonthlyObligations are optional financial facts
+	// used by policies that evaluate DSR or compute credit limits.
+	MonthlyIncome      *int64 // optional, smallest currency unit
+	MonthlyObligations *int64 // optional, smallest currency unit
 }
 
 // Create creates a new assessment and evaluates it against the specified policy.
@@ -101,6 +106,9 @@ func (s *Service) Create(ctx context.Context, req CreateRequest) (domain.Assessm
 		}
 	}
 
+	assessment.MonthlyIncome = req.MonthlyIncome
+	assessment.MonthlyObligations = req.MonthlyObligations
+
 	s.logger.Info("assessment created",
 		"assessment_id", assessment.ID,
 		"policy_id", pol.ID,
@@ -122,6 +130,12 @@ func (s *Service) Create(ctx context.Context, req CreateRequest) (domain.Assessm
 // GetByID retrieves an assessment by its ID.
 func (s *Service) GetByID(ctx context.Context, id string) (domain.Assessment, error) {
 	return s.repo.GetByID(ctx, id)
+}
+
+// List retrieves assessments with basic pagination.
+// If limit and offset are both 0, all assessments are returned.
+func (s *Service) List(ctx context.Context, limit, offset int) ([]domain.Assessment, error) {
+	return s.repo.List(ctx, limit, offset)
 }
 
 // execute runs the assessment through the policy evaluator and persists results.

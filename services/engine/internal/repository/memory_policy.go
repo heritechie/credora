@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"sort"
 	"sync"
 )
 
@@ -48,6 +49,24 @@ func (r *MemoryPolicyRepository) Exists(_ context.Context, id string, version in
 	key := policyMetaKey(id, version)
 	_, ok := r.byID[key]
 	return ok, nil
+}
+
+func (r *MemoryPolicyRepository) List(_ context.Context) ([]PolicyMetadata, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	var metas []PolicyMetadata
+	for _, meta := range r.byID {
+		metas = append(metas, meta)
+	}
+	sort.Slice(metas, func(i, j int) bool {
+		if metas[i].ID != metas[j].ID {
+			return metas[i].ID < metas[j].ID
+		}
+		return metas[i].Version < metas[j].Version
+	})
+
+	return metas, nil
 }
 
 func policyMetaKey(id string, version int) string {

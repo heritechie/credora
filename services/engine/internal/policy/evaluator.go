@@ -88,6 +88,12 @@ func Evaluate(assessment domain.Assessment, policy domain.Policy) (domain.Decisi
 	// Phase 3: Apply precedence to determine outcome
 	decision := applyPrecedence(policy, assessment, trace, now)
 
+	// Phase 4: Attach policy-produced outputs (e.g., credit limit,
+	// approved amount) when the policy defines them.
+	if policy.Outputs != nil {
+		decision.Outputs = policy.Outputs(assessment)
+	}
+
 	return decision, trace, nil
 }
 

@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -103,7 +104,8 @@ func setupTestHandler(t *testing.T) (*Handler, http.Handler) {
 	})
 
 	svc := assessment.NewService(repo, registry, logger)
-	handler := NewHandler(svc, logger)
+	policyRepo := repository.NewMemoryPolicyRepository()
+	handler := NewHandler(svc, policyRepo, logger)
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -242,7 +244,8 @@ func TestCreateAssessment_Knockout(t *testing.T) {
 	})
 
 	svc := assessment.NewService(repo, registry, logger)
-	handler := NewHandler(svc, logger)
+	policyRepo := repository.NewMemoryPolicyRepository()
+	handler := NewHandler(svc, policyRepo, logger)
 	mux := http.NewServeMux()
 	handler.RegisterRoutes(mux)
 
@@ -722,3 +725,25 @@ func TestCreateAssessment_WithOutputs(t *testing.T) {
 }
 
 var _ = strings.Contains
+
+// TestOpenAPIConsistency verifies that the canonical OpenAPI spec
+// (docs/openapi.yaml) matches the derived runtime spec
+// (services/engine/internal/http/openapi.yaml embedded via //go:embed).
+// This test ensures the two files are in sync and will catch
+// drift if either file is manually edited without updating the other.
+func TestOpenAPIConsistency(t *testing.T) {
+	canonical, err := os.ReadFile("../../../docs/openapi.yaml")
+	if err != nil {
+		t.Skip("docs/openapi.yaml not found, skipping consistency check")
+	}
+
+	derived, err := os.ReadFile("openapi.yaml")
+	if err != nil {
+		t.Skip("services/engine/internal/http/openapi.yaml not found, skipping consistency check")
+	}
+
+	if string(canonical) != string(derived) {
+		t.Errorf("OpenAPI spec mismatch:\ncanonical (docs/openapi.yaml): %d bytes\nderived (openapi.yaml): %d bytes",
+			len(canonical), len(derived))
+	}
+}

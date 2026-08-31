@@ -281,6 +281,123 @@ func (r *PostgresRepository) Update(ctx context.Context, a domain.Assessment) er
 	return nil
 }
 
+// List retrieves assessments with basic pagination.
+// If limit and offset are both 0, all assessments are returned.
+func (r *PostgresRepository) List(ctx context.Context, limit, offset int) ([]domain.Assessment, error) {
+	query := `
+		SELECT id, applicant_id, applicant_name, applicant_age,
+			application_id, application_requested_amount, application_purpose,
+			score, status, policy_id, policy_version,
+			decision_outcome, decision_outputs, decision_policy_id, decision_policy_version,
+			error, created_at, started_at, completed_at
+		FROM assessments`
+
+	var args []interface{}
+	argIdx := 1
+
+	if offset > 0 {
+		query += fmt.Sprintf(" OFFSET $%d", argIdx)
+		args = append(args, offset)
+		argIdx++
+	}
+	if limit > 0 {
+		query += fmt.Sprintf(" LIMIT $%d", argIdx)
+		args = append(args, limit)
+	}
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("list assessments: %w", err)
+	}
+	defer rows.Close()
+
+	var assessments []domain.Assessment
+	for rows.Next() {
+		var a domain.Assessment
+		var status string
+		var scoreJSON sql.NullString
+		var outputsJSON sql.NullString
+		var errorStr sql.NullString
+		var appID, appPurpose sql.NullString
+		var appAmount sql.NullInt64
+		var decisionOutcome sql.NullString
+		var decisionPolicyID string
+		var decisionPolicyVersion int
+		var createdAt, startedAt, completedAt sql.NullTime
+
+		if err := rows.Scan(
+			&a.ID, &a.Applicant.ID, &a.Applicant.Name, &a.Applicant.Age,
+			&appID, &appAmount, &appPurpose,
+			&scoreJSON, &status, &a.PolicyID, &a.PolicyVersion,
+			&decisionOutcome, &outputsJSON, &decisionPolicyID, &decisionPolicyVersion,
+			&errorStr, &createdAt, &startedAt, &completedAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan assessment: %w", err)
+		}
+
+		// Reconstruct optional Application
+		if appID.Valid && appID.String != "" {
+			app := &domain.Application{
+				ID:      appID.String,
+				Purpose: appPurpose.String,
+			}
+			if appAmount.Valid {
+				app.RequestedAmount = &appAmount.Int64
+			}
+			a.Application = app
+		}
+
+		a.Status = parseStatus(status)
+		if errorStr.Valid {
+			a.Error = errorStr.String
+		}
+		if createdAt.Valid {
+			a.CreatedAt = createdAt.Time
+		}
+		if startedAt.Valid {
+			a.StartedAt = &startedAt.Time
+		}
+		if completedAt.Valid {
+			a.CompletedAt = &completedAt.Time
+		}
+
+		// Reconstruct Score
+		if scoreJSON.Valid && scoreJSON.String != "" {
+			var score domain.CreditScore
+			if err := json.Unmarshal([]byte(scoreJSON.String), &score); err != nil {
+				return nil, fmt.Errorf("unmarshal score: %w", err)
+			}
+			a.Score = &score
+		}
+
+		// Reconstruct Decision
+		if decisionOutcome.Valid && decisionOutcome.String != "" {
+			d := &domain.Decision{
+				Outcome:       parseDecisionOutcome(decisionOutcome.String),
+				PolicyID:      decisionPolicyID,
+				PolicyVersion: decisionPolicyVersion,
+			}
+
+			if outputsJSON.Valid && outputsJSON.String != "" {
+				var outputs domain.DecisionOutputs
+				if err := json.Unmarshal([]byte(outputsJSON.String), &outputs); err != nil {
+					return nil, fmt.Errorf("unmarshal outputs: %w", err)
+				}
+				d.Outputs = &outputs
+			}
+
+			a.Decision = d
+		}
+
+		assessments = append(assessments, a)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("list iterations: %w", err)
+	}
+
+	return assessments, nil
+}
+
 func (r *PostgresRepository) insertDecision(ctx context.Context, assessmentID string, d domain.Decision) error {
 	for _, reason := range d.Reasons {
 		valueJSON, _ := json.Marshal(reason.Value)

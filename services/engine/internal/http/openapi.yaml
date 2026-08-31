@@ -142,7 +142,43 @@ paths:
               example:
                 error: assessment evaluation failed
                 code: EVALUATION_ERROR
+    get:
+      operationId: getAssessments
+      summary: List assessments
+      description: |
+        Lists assessments with basic pagination.
 
+        ### Pagination
+
+        If `limit` and `offset` are not provided, all assessments are returned.
+      tags:
+        - Assessments
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of assessments to return
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: offset
+          in: query
+          description: Number of assessments to skip before returning results
+          required: false
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: Assessments found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssessmentListResponse"
+        "400":
+          description: Invalid request
+        "500":
+          description: Repository failure
   /api/v1/assessments/{id}:
     get:
       operationId: getAssessment
@@ -303,6 +339,31 @@ paths:
                 error: assessment not found
                 code: NOT_FOUND
 
+  /api/v1/policies:
+    get:
+      operationId: getPolicies
+      summary: List policies
+      description: |
+        Lists all available policies and their versions.
+
+        ### Policy Selection
+
+        Policy identity consists of policy ID + version. The default policy is
+        `personal-loan` v1 if no specific policy is requested.
+      tags:
+        - Policies
+      responses:
+        "200":
+          description: Policies found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PolicyListResponse"
+        "400":
+          description: Invalid request
+        "500":
+          description: Repository failure
+
 components:
   schemas:
     CreateAssessmentRequest:
@@ -319,6 +380,22 @@ components:
           $ref: "#/components/schemas/ScoreInput"
         policy:
           $ref: "#/components/schemas/PolicyInput"
+        monthly_income:
+          type: integer
+          format: int64
+          nullable: true
+          description: |
+            Monthly income in smallest currency unit (e.g., cents, sen).
+            Optional: used by policies that evaluate DSR or compute credit limits.
+          example: 10000000
+        monthly_obligations:
+          type: integer
+          format: int64
+          nullable: true
+          description: |
+            Monthly obligations in smallest currency unit (e.g., cents, sen).
+            Optional: used by policies that evaluate DSR.
+          example: 3000000
 
     ApplicantInput:
       type: object

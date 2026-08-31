@@ -1046,24 +1046,19 @@ Prefer:
 
 ## Current Phase
 
-The immediate focus is:
+Credora is preparing for Phase 3: Decisioning Workspace.
 
-Credora v0 domain and decision engine foundation.
+The detailed Phase 3 specification is:
 
-Priorities:
+```text
+docs/phases/phase-3.md
+```
 
-1. domain model
-2. deterministic rule evaluation
-3. knockout evaluation
-4. score handling
-5. policy/versioning
-6. decision aggregation
-7. evidence
-8. audit trail
-9. mock providers
-10. reliable assessment execution
+Before implementing Phase 3 work, read that document.
 
-Backtesting is a planned capability and should influence the architecture, but should not cause premature implementation complexity.
+Phase 2 (domain model, deterministic evaluation, policy versioning, decision, evidence, audit trail) is complete. The engine can create assessments, evaluate policies, produce structured decisions with reasons and evidence, and persist results.
+
+Phase 3 introduces a developer and analyst-facing Workspace for interacting with the decisioning engine. It is NOT a generic dashboard, policy editor, or backtesting platform.
 
 Do not build a UI or SaaS layer before the core engine is credible.
 

@@ -180,11 +180,17 @@ func (s AssessmentStatus) String() string {
 //
 // Application is optional: an assessment may evaluate an applicant directly
 // (e.g., limit assessment, pre-screening) without an application context.
+// MonthlyIncome and MonthlyObligations are optional: not all assessment types
+// require an application context with financial facts (e.g., limit assessment
+// may have financial facts directly on the assessment).
 type Assessment struct {
 	ID          string
 	Applicant   Applicant
 	Application *Application // optional
 	Score       *CreditScore
+
+	MonthlyIncome      *int64 // optional, smallest currency unit
+	MonthlyObligations *int64 // optional, smallest currency unit
 
 	Status        AssessmentStatus
 	Error         string
@@ -243,6 +249,10 @@ type Policy struct {
 	Knockouts       []Knockout
 	Rules           []Rule
 	ScoreThresholds *ScoreThresholds
+	// Outputs computes policy-produced values (e.g., credit limit,
+	// approved amount) for the decision. It is optional: policies that
+	// do not produce outputs leave it nil.
+	Outputs func(Assessment) *DecisionOutputs
 	// DefaultOutcome is used when no knockouts, rules, or score thresholds
 	// determine the outcome. This prevents silent APPROVE when the policy
 	// cannot establish an approval condition. Policies should set this

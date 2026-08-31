@@ -9,11 +9,17 @@ import "time"
 
 // CreateAssessmentRequest is the API contract for creating an assessment.
 // Applicant is required. Application is optional. Policy is optional with defaults.
+// MonthlyIncome and MonthlyObligations are optional financial facts used by
+// policies that evaluate DSR or compute credit limits.
+// All monetary values use the smallest currency unit (e.g., cents, sen).
 type CreateAssessmentRequest struct {
 	Applicant   ApplicantDTO    `json:"applicant"`
 	Application *ApplicationDTO `json:"application,omitempty"`
 	Score       *ScoreDTO       `json:"score,omitempty"`
 	Policy      *PolicyRequest  `json:"policy,omitempty"`
+
+	MonthlyIncome      *int64 `json:"monthly_income,omitempty"`
+	MonthlyObligations *int64 `json:"monthly_obligations,omitempty"`
 }
 
 // PolicyRequest represents the policy identifiers in API requests.
@@ -60,10 +66,43 @@ type AssessmentResponse struct {
 	CompletedAt *time.Time        `json:"completed_at,omitempty"`
 }
 
+// AssessmentListItem is a minimal summary of an assessment for listing.
+type AssessmentListItem struct {
+	ID          string        `json:"id"`
+	Status      string        `json:"status"`
+	Policy      PolicyDTO     `json:"policy"`
+	Decision    *DecisionList `json:"decision,omitempty"`
+	CreatedAt   time.Time     `json:"created_at"`
+	CompletedAt *time.Time    `json:"completed_at,omitempty"`
+}
+
+// DecisionList is a minimal decision summary for listing.
+type DecisionList struct {
+	Outcome string `json:"outcome"`
+}
+
+// AssessmentListResponse is the API response for listing assessments.
+type AssessmentListResponse struct {
+	Items []AssessmentListItem `json:"items"`
+}
+
 // PolicyDTO represents policy metadata in API responses.
 type PolicyDTO struct {
 	ID      string `json:"id"`
 	Version int    `json:"version"`
+}
+
+// PolicyListItem is a minimal policy summary for listing.
+type PolicyListItem struct {
+	ID          string `json:"id"`
+	Version     int    `json:"version"`
+	Description string `json:"description,omitempty"`
+	Status      string `json:"status"`
+}
+
+// PolicyListResponse is the API response for listing policies.
+type PolicyListResponse struct {
+	Items []PolicyListItem `json:"items"`
 }
 
 // DecisionResponse is the API response for a decision.

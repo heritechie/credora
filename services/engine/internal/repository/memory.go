@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"sort"
 	"sync"
 
 	"credora/internal/domain"
@@ -56,4 +57,32 @@ func (r *MemoryRepository) Update(_ context.Context, assessment domain.Assessmen
 
 	r.byID[assessment.ID] = assessment
 	return nil
+}
+
+func (r *MemoryRepository) List(_ context.Context, limit, offset int) ([]domain.Assessment, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	var assessments []domain.Assessment
+	keys := make([]string, 0, len(r.byID))
+	for k := range r.byID {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	start := 0
+	if offset > 0 {
+		start = offset
+	}
+	end := len(keys)
+	if limit > 0 && limit < end-start {
+		end = start + limit
+	}
+
+	for i := start; i < end; i++ {
+		a := r.byID[keys[i]]
+		assessments = append(assessments, a)
+	}
+
+	return assessments, nil
 }
